@@ -1,4 +1,11 @@
-import { createContext, ReactNode, useContext, useState } from "react";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { toast } from "react-toastify";
 import { api } from "../services/api";
 import { Product, Stock } from "../types";
@@ -32,10 +39,19 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     return [];
   });
 
-  const updateAndSaveCart = (newCart: Product[]) => {
-    setCart(newCart);
-    localStorage.setItem("@RocketShoes:cart", JSON.stringify(newCart));
-  };
+  const prevCartRef = useRef<Product[]>();
+
+  useEffect(() => {
+    prevCartRef.current = cart;
+  });
+
+  const cartPreviousValue = prevCartRef.current ?? cart;
+
+  useEffect(() => {
+    if (cartPreviousValue !== cart) {
+      localStorage.setItem("@RocketShoes:cart", JSON.stringify(cart));
+    }
+  }, [cartPreviousValue, cart]);
 
   const addProduct = async (productId: number) => {
     try {
@@ -57,7 +73,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
           });
         }
       } else {
-        updateAndSaveCart([...cart, { ...productDataApi, amount: 1 }]);
+        setCart([...cart, { ...productDataApi, amount: 1 }]);
       }
     } catch {
       toast.error("Erro na adição do produto");
@@ -71,7 +87,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       }
       const cartUpdated = cart.filter((item) => item.id !== productId);
       if (cartUpdated) {
-        updateAndSaveCart(cartUpdated);
+        setCart(cartUpdated);
       }
     } catch {
       toast.error("Erro na remoção do produto");
@@ -100,7 +116,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
           }
           return item;
         });
-        updateAndSaveCart(updatedProducts);
+        setCart(updatedProducts);
       }
     } catch {
       toast.error("Erro na alteração de quantidade do produto");
