@@ -40,12 +40,11 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
   });
 
   const prevCartRef = useRef<Product[]>();
+  const cartPreviousValue = prevCartRef.current ?? cart;
 
   useEffect(() => {
     prevCartRef.current = cart;
   });
-
-  const cartPreviousValue = prevCartRef.current ?? cart;
 
   useEffect(() => {
     if (cartPreviousValue !== cart) {
